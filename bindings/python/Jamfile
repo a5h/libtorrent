@@ -5,6 +5,8 @@ import project ;
 import targets ;
 import "class" : new ;
 import modules ;
+import path ;
+import regex ;
 
 use-project /torrent : ../.. ;
 
@@ -31,8 +33,18 @@ if $(LIBTORRENT_PYTHON_INTERPRETER)
 # copied from boost 1.63's boost python jamfile
 rule find-py3-version
 {
-	local versions = [ feature.values python ] ;
 	local py3ver ;
+	# expect the path to be something like boost_1_68_0
+	local boost-ver = [ regex.match ".*_([0-9]\+)_([0-9]\+)_([0-9]\+)$" : [ path.basename $(BOOST_ROOT) ] : 1 2 3 ] ;
+	local boost-ver-cutoff = 1 68 0 ;
+	if boost-ver >= $(boost-ver-cutoff)
+	{
+		# starting with boost 1.68.0 boost python no longer define a separate
+		# target for python3 (boost_python3) so then we just use the regular
+		# boost_python target
+		return $(py3ver) ;
+	}
+	local versions = [ feature.values python ] ;
 	for local v in $(versions)
 	{
 		if $(v) >= 3.0
